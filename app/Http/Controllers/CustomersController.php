@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\create_customers_table;
+use App\Customer;
 use Illuminate\Http\Request;
 
-class CreateCustomersTableController extends Controller
+class CustomersController extends Controller
 {
     /**
      * Display a listing of the resource.

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateCreateCustomersTablesTable extends Migration
+class CreateCustomersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -32,6 +32,6 @@ class CreateCreateCustomersTablesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('create_customers_tables');
+        Schema::dropIfExists('customers');
     }
 }
