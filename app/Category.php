@@ -9,6 +9,8 @@ class Category extends Model
 {
     use SoftDeletes;
 
+    protected $fillable = ['name', 'slug'];
+
     public function products()
     {
         return $this->belongsToMany('App\Product', 'product_categories');
