@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Product;
+use App\Category;
+use App\ProductCategory;
 use Illuminate\Http\Request;
-
+use App\Http\Requests\ProductRequest;
 class ProductController extends Controller
 {
     /**
@@ -14,7 +16,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $products = Product::with(['categories' => function($query) {
+            return $query->select('categories.id', 'name');
+        }])->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $products
+        ], 200);
     }
 
     /**
@@ -33,9 +41,38 @@ class ProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        //
+        $product = new Product([
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'weight' => $request->weight,
+            'stock' => $request->stock,
+            'image' => $request->image
+        ]);
+
+        foreach($request->categories as $category_id) {
+            $category = Category::where('id', $category_id)->get()->count();
+            if($category == 0) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'There was an invalid category'
+                ], 400);
+            } else {
+                $product->save();
+                $productCategory = new ProductCategory([
+                    'product_id' => $product->id,
+                    'category_id' => $category_id
+                ]);
+                $productCategory->save();
+            }
+        }
+
+        return response()->json([
+            'status' => 201,
+            'message' => 'A new product was added'
+        ], 201);
     }
 
     /**
@@ -46,7 +83,13 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        $product = Product::with(['categories' => function($query) {
+            return $query->select(['categories.id', 'name']);
+        }])->where('id', $product->id)->first();
+        return response()->json([
+            'status' => 200,
+            'data' => $product
+        ], 200);
     }
 
     /**
@@ -67,9 +110,43 @@ class ProductController extends Controller
      * @param  \App\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
-        //
+        $product->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'weight' => $request->weight,
+            'stock' => $request->stock,
+            'image' => $request->image
+        ]);
+
+        foreach($request->categories as $category_id) {
+            $category = Category::where('id', $category_id)->get()->count();
+            if($category == 0) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'There was an invalid category'
+                ], 400);
+            } else {
+                ProductCategory::where('product_id', $product->id)->delete();
+                $productCategory = new ProductCategory([
+                    'product_id' => $product->id,
+                    'category_id' => $category_id
+                ]);
+                $productCategory->save();
+            }
+        }
+
+        $updatedProduct = Product::with(['categories' => function($query) {
+            return $query->select(['categories.id', 'name']);
+        }])->where('id', $product->id)->first();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product update',
+            'data' => $updatedProduct
+        ], 200);
     }
 
     /**
@@ -80,6 +157,33 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product deleted',
+            'data' => $product
+        ], 200);
+    }
+
+    public function restore($id)
+    {
+        $product = Product::onlyTrashed()->where('id', $id)->first();
+        $product->restore();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product restored',
+            'data' => $product
+        ], 200);
+    }
+
+    public function forceDestroy($id)
+    {
+        $product = Product::onlyTrashed()->where('id', $id)->first();
+        $product->forceDelete();
+        $product->categories()->forceDelete();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product permanently deleted',
+        ], 200);
     }
 }

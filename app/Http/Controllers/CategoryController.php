@@ -53,7 +53,7 @@ class CategoryController extends Controller
         return response()->json([
             'status' => 201,
             'message' => 'New category added'
-        ], 200);
+        ], 201);
     }
 
     /**
@@ -68,7 +68,18 @@ class CategoryController extends Controller
         return response()->json([
             'status' => 200,
             'data' => $category
-        ]);
+        ], 200);
+    }
+
+    public function showProducts($slug)
+    {
+        $products = Category::with(['products' => function($query) {
+            return $query->select(['products.id', 'name', 'description', 'price', 'weight', 'stock', 'image']);
+        }])->where('slug', $slug)->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $products
+        ], 200);
     }
 
 
@@ -120,6 +131,28 @@ class CategoryController extends Controller
             'status' => 200,
             'message' => 'Category deleted',
             'data' => $category
+        ], 200);
+    }
+
+    public function restore($id)
+    {
+        $category = Category::onlyTrashed()->where('id', $id)->first();
+        $category->restore();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Category restored',
+            'data' => $category
+        ], 200);
+    }
+
+    public function forceDestroy($id)
+    {
+        $category = Category::onlyTrashed()->where('id', $id)->first();
+        $category->forceDelete();
+        $category->products()->forceDelete();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Category permanently deleted'
         ], 200);
     }
 }

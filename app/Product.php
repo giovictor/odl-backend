@@ -9,6 +9,10 @@ class Product extends Model
 {
     use SoftDeletes;
 
+    protected $fillable = ['name', 'description', 'price', 'weight', 'stock', 'image'];
+
+    protected $hidden = ['pivot'];
+
     public function categories()
     {
         return $this->belongsToMany('App\Category', 'product_categories');
