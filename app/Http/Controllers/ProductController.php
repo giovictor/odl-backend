@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Product;
 use App\Category;
 use App\ProductCategory;
+use App\Cart;
+use App\Wishlist;
 use Illuminate\Http\Request;
 use App\Http\Requests\ProductRequest;
 class ProductController extends Controller
@@ -185,5 +187,95 @@ class ProductController extends Controller
             'status' => 200,
             'message' => 'Product permanently deleted',
         ], 200);
+    }
+
+    public function cart()
+    {
+        $cart = Cart::where('user_id', auth()->user()->id)
+        ->join('products', 'products.id', 'product_id')
+        ->select('product_id', 'name', 'description', 'image', 'price', 'weight', 'quantity')
+        ->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $cart
+        ], 200);
+    }
+
+    public function wishlist()
+    {
+        $wishlist = Wishlist::where('user_id', auth()->user()->id)
+        ->join('products', 'products.id', 'product_id')
+        ->select('product_id', 'name', 'description', 'image', 'price', 'weight')
+        ->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $wishlist
+        ], 200);
+    }
+
+    public function addToCart(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer'
+        ]);
+        $cart = new Cart([
+            'user_id' => auth()->user()->id,
+            'product_id' => $request->product_id,
+            'quantity' => $request->quantity
+        ]);
+        $cart->save();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product added to cart'
+        ], 200);
+    }
+
+    public function addToWishlist(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+        ]);
+        $wishlist = new Wishlist([
+            'user_id' => auth()->user()->id,
+            'product_id' => $request->product_id,
+        ]);
+        $wishlist->save();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product added to wishlist'
+        ], 200);
+    }
+
+    public function removeFromCart($id) {
+        $cart = Cart::where('user_id', auth()->user()->id)->where('product_id', $id);
+        if($cart->get()->count() == 0) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Product not found in cart'
+            ], 400);
+        } else {
+            $cart->delete();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Product removed from cart'
+            ], 200);
+        }
+    }
+
+    public function removeFromWishlist($id) {
+        $wishlist = Wishlist::where('user_id', auth()->user()->id)->where('product_id', $id);
+        if($wishlist->get()->count() == 0) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Product not found in wishlist'
+            ], 400);
+        } else {
+            $wishlist->delete();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Product removed from wishlist'
+            ], 200);
+        }
     }
 }

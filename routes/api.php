@@ -41,4 +41,10 @@ Route::prefix('v1')->group(function() {
     Route::delete('products/{product}', 'ProductController@destroy')->middleware('auth:api');
     Route::patch('products/{id}/restore', 'ProductController@restore')->middleware('auth:api');
     Route::delete('products/{id}/delete', 'ProductController@forceDestroy')->middleware('auth:api');
+    Route::get('cart', 'ProductController@cart')->middleware('auth:api');
+    Route::get('wishlist', 'ProductController@wishlist')->middleware('auth:api');
+    Route::post('products/cart', 'ProductController@addToCart')->middleware('auth:api');
+    Route::post('products/wishlist', 'ProductController@addToWishlist')->middleware('auth:api');
+    Route::delete('products/{id}/cart', 'ProductController@removeFromCart')->middleware('auth:api');
+    Route::delete('products/{id}/wishlist', 'ProductController@removeFromWishlist')->middleware('auth:api');
 });
