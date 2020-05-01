@@ -3,83 +3,110 @@
 namespace App\Http\Controllers;
 
 use App\Order;
+use App\OrderDetail;
+use App\Cart;
+use App\Product;
 use Illuminate\Http\Request;
+use App\Http\Requests\OrderRequest;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        //
+
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function cart()
     {
-        //
+        $cart = Cart::where('user_id', auth()->user()->id)
+        ->join('products', 'products.id', 'product_id')
+        ->select('product_id', 'name', 'description', 'image', 'price', 'weight', 'quantity')
+        ->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $cart,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function addToCart(Request $request)
     {
-        //
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer'
+        ]);
+        $cart = new Cart([
+            'user_id' => auth()->user()->id,
+            'product_id' => $request->product_id,
+            'quantity' => $request->quantity
+        ]);
+        $cart->save();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product added to cart'
+        ], 200);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Order  $order
-     * @return \Illuminate\Http\Response
-     */
+    public function removeFromCart($id) {
+        $cart = Cart::where('user_id', auth()->user()->id)->where('product_id', $id);
+        if($cart->get()->count() == 0) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Product not found in cart'
+            ], 400);
+        } else {
+            $cart->delete();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Product removed from cart'
+            ], 200);
+        }
+    }
+
+    public function store(OrderRequest $request)
+    {
+        $order = new Order([
+            'user_id' => auth()->user()->id,
+            'amount' => $request->amount,
+            'billing_address' => $request->billing_address,
+            'shipping_address' => $request->shipping_address,
+            'contact_number' => $request->contact_number,
+            'status' => $request->status
+        ]);
+
+        foreach($request->products as $product) {
+            $cart = Cart::where('user_id', auth()->user()->id)->where('product_id', $product['product_id']);
+            if($cart->get()->count() == 0) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'Some products to be checked out were not found in cart'
+                ], 400);
+            } else {
+                $cart->delete();
+                $order->save();
+                $order_detail = new OrderDetail([
+                    'order_id' => $order->id,
+                    'product_id' => $product['product_id'],
+                    'quantity' => $product['quantity']
+                ]);
+                $order_detail->save();
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Order was successful',
+            'order_id' => $order->id,
+            'created' => $order->created_at
+        ], 200);
+    }
+
     public function show(Order $order)
     {
-        //
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Order  $order
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Order $order)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Order  $order
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Order $order)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Order  $order
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Order $order)
     {
-        //
+
     }
 }
