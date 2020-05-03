@@ -13,9 +13,8 @@ use App\Http\Requests\RegisterRequest;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function generateToken($credentials)
     {
-        $credentials = $request->only('email', 'password');
         if(!Auth::attempt($credentials)) {
             return response()->json([
                 'status' => 401,
@@ -28,8 +27,8 @@ class AuthController extends Controller
                     'grant_type' => 'password',
                     'client_id' => config('passport.client_id'),
                     'client_secret' => config('passport.client_secret'),
-                    'username' => $request->email,
-                    'password' => $request->password,
+                    'username' => $credentials['email'],
+                    'password' => $credentials['password'],
                     'scope' => ''
                 ]
             ]);
@@ -37,6 +36,26 @@ class AuthController extends Controller
                 'status' => 200,
                 'data' => json_decode((string) $response->getBody(), true)
             ], 200);
+        }
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+        return $this->generateToken($credentials);
+    }
+
+    public function adminLogin(Request $request)
+    {
+        $user = User::where('email', $request->email)->first();
+        if($user->is_admin == 1) {
+            $credentials = $request->only('email', 'password');
+            return $this->generateToken($credentials);
+        } else {
+            return response()->json([
+                'status' => 401,
+                'message' => 'Administrator accounts are only allowed',
+            ], 401);
         }
     }
 

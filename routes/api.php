@@ -23,6 +23,7 @@ Route::prefix('v1')->group(function() {
     Route::prefix('auth')->group(function() {
         Route::post('login', 'AuthController@login');
         Route::post('register', 'AuthController@register');
+        Route::post('admin/login', 'AuthController@adminLogin');
     });
 
     Route::get('categories', 'CategoryController@index');
