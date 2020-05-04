@@ -47,15 +47,22 @@ class AuthController extends Controller
 
     public function adminLogin(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
-        if($user->is_admin == 1) {
-            $credentials = $request->only('email', 'password');
-            return $this->generateToken($credentials);
-        } else {
+        $user = User::where('email', $request->email);
+        if($user->get()->count() == 0) {
             return response()->json([
                 'status' => 401,
-                'message' => 'Administrator accounts are only allowed',
+                'message' => 'Invalid email or password.',
             ], 401);
+        } else {
+            if($user->first()->is_admin == 1) {
+                $credentials = $request->only('email', 'password');
+                return $this->generateToken($credentials);
+            } else {
+                return response()->json([
+                    'status' => 401,
+                    'message' => 'Administrator accounts are only allowed.',
+                ], 401);
+            }
         }
     }
 
