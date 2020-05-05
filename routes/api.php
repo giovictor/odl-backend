@@ -24,6 +24,7 @@ Route::prefix('v1')->group(function() {
         Route::post('login', 'AuthController@login');
         Route::post('register', 'AuthController@register');
         Route::post('admin/login', 'AuthController@adminLogin');
+        Route::post('logout', 'AuthController@logout')->middleware('auth:api');
     });
 
     Route::get('categories', 'CategoryController@index');
