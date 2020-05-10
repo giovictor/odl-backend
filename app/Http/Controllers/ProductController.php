@@ -9,6 +9,7 @@ use App\Cart;
 use App\Wishlist;
 use Illuminate\Http\Request;
 use App\Http\Requests\ProductRequest;
+use Storage;
 class ProductController extends Controller
 {
     /**
@@ -51,10 +52,12 @@ class ProductController extends Controller
             'price' => $request->price,
             'weight' => $request->weight,
             'stock' => $request->stock,
-            'image' => $request->image
+            'image' => $request->file('image')->store('images')
         ]);
 
-        foreach($request->categories as $category_id) {
+        $categories = explode(',', $request->categories);
+
+        foreach($categories as $category_id) {
             $category = Category::where('id', $category_id)->get()->count();
             if($category == 0) {
                 return response()->json([
@@ -114,16 +117,19 @@ class ProductController extends Controller
      */
     public function update(ProductRequest $request, Product $product)
     {
+        Storage::delete($product->image);
         $product->update([
             'name' => $request->name,
             'description' => $request->description,
             'price' => $request->price,
             'weight' => $request->weight,
             'stock' => $request->stock,
-            'image' => $request->image
+            'image' => $request->file('image')->store('images')
         ]);
 
-        foreach($request->categories as $category_id) {
+        $categories = explode(',', $request->categories);
+
+        foreach($categories as $category_id) {
             $category = Category::where('id', $category_id)->get()->count();
             if($category == 0) {
                 return response()->json([
