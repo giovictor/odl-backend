@@ -28,7 +28,7 @@ Route::prefix('v1')->group(function() {
     });
 
     Route::get('categories', 'CategoryController@index');
-    Route::get('categories/{slug}', 'CategoryController@show');
+    Route::get('categories/{category}', 'CategoryController@show');
     Route::get('categories/{slug}/products', 'CategoryController@showProducts');
     Route::post('categories', 'CategoryController@store')->middleware('auth:api', 'admin_only');
     Route::patch('categories/{category}', 'CategoryController@update')->middleware('auth:api', 'admin_only');

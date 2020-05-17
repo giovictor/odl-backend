@@ -21,7 +21,7 @@ class ProductController extends Controller
     {
         $products = Product::with(['categories' => function($query) {
             return $query->select('categories.id', 'name');
-        }])->get();
+        }])->orderBy('id', 'desc')->get();
         return response()->json([
             'status' => 200,
             'data' => $products
@@ -152,7 +152,7 @@ class ProductController extends Controller
 
         return response()->json([
             'status' => 200,
-            'message' => 'Product update',
+            'message' => 'Product updated',
             'data' => $updatedProduct
         ], 200);
     }

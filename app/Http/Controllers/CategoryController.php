@@ -15,7 +15,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::orderBy('id', 'desc')->get();
         return response()->json([
             'status' => 200,
             'data' => $categories
@@ -62,9 +62,8 @@ class CategoryController extends Controller
      * @param  \App\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function show($slug)
+    public function show(Category $category)
     {
-        $category = Category::where('slug', $slug)->first();
         return response()->json([
             'status' => 200,
             'data' => $category
